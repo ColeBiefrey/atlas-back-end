@@ -13,7 +13,7 @@ def get_name(employee_id):
     if response.status_code == 200:
         user = response.json()
         return user.get('name', 'No name found')
-    
+
     return ('Failed to fetch name')
 
 
