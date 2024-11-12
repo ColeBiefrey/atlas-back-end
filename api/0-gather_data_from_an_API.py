@@ -1,31 +1,52 @@
 #!/usr/bin/python3
-""" API to engage in fetchs """
+
+""" Rest API to engage in fetchs """
 import requests
 import sys
 
 
-def TODO_list_progress(employee_id):
-""" fetchs employee data """
-    api_url = "https://jsonplaceholder.typicode.com"
-    users_url = f"{api_url}/users/{employee_id}"
-    todos_url = f"{api_url}/todos"
+def get_name(employee_id):
+    """ fetchs employee names via ID """
+    url = "https://jsonplaceholder.typicode.com/users/"
+    response = requests.get(url, params={'id': employee_id})
+    if response.status_code == 200:
+        users = response.json()
+        for user in users:
+            if user['id'] == employee_id:
+                return user.get('name', 'No name found')
+    return ('Failed to fetch name')
 
-    get_employee_name = requests.get(users_url)
-    employee_name = get_employee_name.json().get('name')
 
-    params = {'userId': employee_id}
-    todos_total = requests.get(todos_url, params=params)
-    todos = todos_total.json()
-    finished_tasks = [todo for todo in todos if todo['completed']]
+def get_todos(employee_id):
+    """ fetchs employee list """
+    url = "https://jsonplaceholder.typicode.com/todos/"
+    response = requests.get(url, params={'userId': employee_id})
+    if response.status_code == 200:
+        todo_list = response.json()
+        completed_tasks = []
+        for task in todo_list:
+            if task["completed"]:
+                completed_tasks.append(task["title"])
+        total_done = len(completed_tasks)
+        total_todo = len(todo_list)
 
+        return (total_done, total_todo, completed_tasks)
+    return []
+
+
+def get_employee_todo(employee_id):
+    """ fetchs totals and completes of a user """
+    name = get_name(employee_id)
+    todos = get_todos(employee_id)
     print(
-        f"Employee {employee_name} is done with tasks"
-        f"({len(finished_tasks)}/{len(todos)}):"
-    )
-    for task in finished_tasks:
-        print(f"\t {task['title']}")
+        f"Employee {name} is done with tasks("
+        f"{todos[0]}/{todos[1]}):"
+        )
+    completed_tasks = todos[2]
+    for completed_task in completed_tasks:
+        print(f"\t {completed_task}")
 
 
 if __name__ == "__main__":
-
-    TODO_list_progress(int(sys.argv[1]))
+    employee_id = int(sys.argv[1])
+    get_employee_todo(employee_id)
