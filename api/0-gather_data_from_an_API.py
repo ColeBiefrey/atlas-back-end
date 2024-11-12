@@ -7,13 +7,13 @@ import sys
 
 def get_name(employee_id):
     """ fetchs employee names via ID """
-    url = "https://jsonplaceholder.typicode.com/users/"
-    response = requests.get(url, params={'id': employee_id})
+    url = f"https://jsonplaceholder.typicode.com/users/{employee_id}"
+    response = requests.get(url)
+
     if response.status_code == 200:
-        users = response.json()
-        for user in users:
-            if user['id'] == employee_id:
-                return user.get('name', 'No name found')
+        user = response.json()
+        return user.get('name', 'No name found')
+    
     return ('Failed to fetch name')
 
 
