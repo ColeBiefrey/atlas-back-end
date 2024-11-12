@@ -1,72 +1,78 @@
 #!/usr/bin/python3
+""" Rest API to engage in fetch """
 
-""" Rest API to engage in fetchs """
 import csv
 import requests
 import sys
 
 
-def get_name(employee_id):
-    """ fetchs employee names via ID """
-    url = "https://jsonplaceholder.typicode.com/users/"
-    response = requests.get(url, params={'id': employee_id})
-    if response.status_code == 200:
-        users = response.json()
-        for user in users:
-            if user['id'] == employee_id:
-                return user.get('name', 'No name found')
-    return ('Failed to fetch name')
+args = sys.argv
+if len(args) != 2:
+    print("Usage: python script_name.py USER_ID")
+    sys.exit(1)
 
 
-def get_username(employee_id):
-    """ fetchs username of employee via ID """
-    url = "https://jsonplaceholder.typicode.com/users/"
-    response = requests.get(url, params={'id': employee_id})
-    if response.status_code == 200:
-        users = response.json()
-        for user in users:
-            if user['id'] == employee_id:
-                return user.get('username', 'No username found')
-    return ('Failed to fetch name')
+user_id = int(args[1])
+url = 'https://jsonplaceholder.typicode.com/'
 
 
-def get_todos(employee_id):
-    """ fetchs employee list and returns task list """
-    url = "https://jsonplaceholder.typicode.com/todos/"
-    response = requests.get(url, params={'userId': employee_id})
-    if response.status_code == 200:
-        todo_list = response.json()
-        tasks = []
-        for task in todo_list:
-            tasks.append({"title": task["title"],
-                          "completed": task["completed"]})
-        return tasks
-    return []
+user_result = requests.get(url + "users/" + str(user_id))
+todos_result = requests.get(url + "todos")
+user_json = user_result.json()
+todos_json = todos_result.json()
 
 
-def export_to_csv(employee_id, name, tasks):
-    """ exports task data to CSV """
-    filename = f"{employee_id}.csv"
-    with open(filename, 'w', newline='') as csvfile:
-        for task in tasks:
-            row = (f'"{employee_id}","{name}","'
-                   f'{"True" if task["completed"] else "False"}",'
-                   f'"{task["title"]}"\n')
-            csvfile.write(row)
+EMPLOYEE_NAME = user_json["username"]
 
 
-def get_employee_todo(employee_id):
-    """ fetchs totals and completes of a user """
-    name = get_name(employee_id)
-    tasks = get_todos(employee_id)
-    username = get_username(employee_id)
-    print(f"Employee {name} has {len(tasks)} tasks:")
-    for task in tasks:
-        print(f"\t {task['title']} - "
-              f"{'Completed' if task['completed'] else 'Incomplete'}")
-    export_to_csv(employee_id, username, tasks)
+user_tasks = [task for task in todos_json
+              if task["userId"] == user_id]
 
+
+fields = ['USER_ID', 'USERNAME', 'TASK_COMPLETED_STATUS', 'TASK_TITLE']
+
+csv_file_path = f'{user_id}.csv'
+with open(csv_file_path, 'w', newline='') as file:
+    writer = csv.writer(file, quoting=csv.QUOTE_ALL)
+
+    for task in user_tasks:
+        completed_status = "True" if task["completed"] else "False"
+        writer.writerow([user_id,
+                         EMPLOYEE_NAME, completed_status, task["title"]])
+
+
+class Get_Todo():
+    """ condensed class that handles employee info """
+
+    def employee_list(self):
+        """ employee data getter """
+        args = sys.argv
+        user_id = args[1]
+
+        url = 'https://jsonplaceholder.typicode.com/'
+
+        user_result = requests.get(url + "users/" + user_id)
+        todos_result = requests.get(url + "todos")
+
+        user_json = user_result.json()
+        todos_json = todos_result.json()
+
+        EMPLOYEE_NAME = user_json["name"]
+
+        NUMBER_OF_DONE_TASKS = sum(1 for task in todos_json
+                                   if str(task["userId"]) == user_id
+                                   and task["completed"] is True)
+
+        TOTAL_NUMBER_OF_TASKS = sum(1 for task in todos_json
+                                    if str(task["userId"]) == user_id)
+
+
+        print(f"Employee {EMPLOYEE_NAME} is done with tasks"
+              f"({NUMBER_OF_DONE_TASKS}/{TOTAL_NUMBER_OF_TASKS}):")
+
+        for task in todos_json:
+            if str(task["userId"]) == user_id and task["completed"] is True:
+                print(f"\t {task['title']}")
 
 if __name__ == "__main__":
-    employee_id = int(sys.argv[1])
-    get_employee_todo(employee_id)
+    Get_Todo().employee_list()
