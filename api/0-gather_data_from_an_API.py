@@ -1,52 +1,48 @@
 #!/usr/bin/python3
-
-""" Rest API to engage in fetchs """
+""" API getter that fetchs and utilizes information from a url """
 import requests
 import sys
 
 
-def get_name(employee_id):
-    """ fetchs employee names via ID """
-    url = "https://jsonplaceholder.typicode.com/users/"
-    response = requests.get(url, params={'id': employee_id})
-    if response.status_code == 200:
-        users = response.json()
-        for user in users:
-            if user['id'] == employee_id:
-                return user.get('name', 'No name found')
-    return ('Failed to fetch name')
+def fetch_user_data(user_id):
+    """ fetchs API information """
+    user_url = f'https://jsonplaceholder.typicode.com/users/{user_id}'
+    response = requests.get(user_url)
+    return response.json()
 
 
-def get_todos(employee_id):
-    """ fetchs employee list """
-    url = "https://jsonplaceholder.typicode.com/todos/"
-    response = requests.get(url, params={'userId': employee_id})
-    if response.status_code == 200:
-        todo_list = response.json()
-        completed_tasks = []
-        for task in todo_list:
-            if task["completed"]:
-                completed_tasks.append(task["title"])
-        total_done = len(completed_tasks)
-        total_todo = len(todo_list)
-
-        return (total_done, total_todo, completed_tasks)
-    return []
+def fetch_user_tasks(user_id):
+    """ fetchs user tasks """
+    todo_url = f'https://jsonplaceholder.typicode.com/todos/?userId={user_id}'
+    response = requests.get(todo_url)
+    return response.json()
 
 
-def get_employee_todo(employee_id):
-    """ fetchs totals and completes of a user """
-    name = get_name(employee_id)
-    todos = get_todos(employee_id)
-    print(
-        f"Employee {name} is done with tasks("
-        f"{todos[0]}/{todos[1]}):"
-        )
-    completed_tasks = todos[2]
-    for completed_task in completed_tasks:
-        print(f"\t {completed_task}")
+def get_completed_tasks(tasks):
+    """ extract tasks from main list """
+    return [task['title'] for task in tasks if task['completed']]
+
+
+def print_completed_tasks(user_name, completed_tasks, total_tasks):
+    """ prints tasks """
+    print(f'Employee {user_name} is done with tasks({len(completed_tasks)}/{total_tasks}):')
+    for task in completed_tasks:
+        print(f'\t {task}')
+
+
+def employee_todo(user_id):
+    """ function that gathers and utilizes information """
+    user_data = fetch_user_data(user_id)
+    user_name = user_data.get('name')
+    tasks = fetch_user_tasks(user_id)
+    completed_tasks = get_completed_tasks(tasks)
+    print_completed_tasks(user_name, completed_tasks, len(tasks))
 
 
 if __name__ == "__main__":
-    employee_id = int(sys.argv[1])
-    get_employee_todo(employee_id)
+    if len(sys.argv) == 2:
+        try:
+            user_id = int(sys.argv[1])
+            employee_todo(user_id)
+        except ValueError:
+            print("Please provide a valid number user ID.")
