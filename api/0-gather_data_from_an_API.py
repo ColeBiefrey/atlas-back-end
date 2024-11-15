@@ -1,49 +1,52 @@
 #!/usr/bin/python3
-""" API getter that fetchs and utilizes information from a url """
+
+""" Rest API to engage in fetchs """
 import requests
 import sys
 
 
-def fetch_data(url):
-    """ geter for API information """
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+def get_name(employee_id):
+    """ fetchs employee names via ID """
+    url = "https://jsonplaceholder.typicode.com/users/"
+    response = requests.get(url, params={'id': employee_id})
+    if response.status_code == 200:
+        users = response.json()
+        for user in users:
+            if user['id'] == employee_id:
+                return user.get('name', 'No name found')
+    return ('Failed to fetch name')
 
 
-def get_user_name(user_id):
-    """ API handler for usernames """
-    user_url = f'https://jsonplaceholder.typicode.com/users/{user_id}'
-    user_data = fetch_data(user_url)
-    return user_data.get('name')
+def get_todos(employee_id):
+    """ fetchs employee list """
+    url = "https://jsonplaceholder.typicode.com/todos/"
+    response = requests.get(url, params={'userId': employee_id})
+    if response.status_code == 200:
+        todo_list = response.json()
+        completed_tasks = []
+        for task in todo_list:
+            if task["completed"]:
+                completed_tasks.append(task["title"])
+        total_done = len(completed_tasks)
+        total_todo = len(todo_list)
+
+        return (total_done, total_todo, completed_tasks)
+    return []
 
 
-def get_completed_tasks(user_id):
-    """ API Handler for tasks """
-    todo_url = f'https://jsonplaceholder.typicode.com/todos?userId={user_id}'
-    todos = fetch_data(todo_url)
-    return [task.get('title') for task in todos if task.get('completed')]
-
-
-def employee_todo():
-    """ lists todo of the employees and compeltions """
-    try:
-        user_id = sys.argv[1]
-        name = get_user_name(user_id)
-        tasks = get_completed_tasks(user_id)
-        print(f'Employee {name} is tasks({len(tasks)}/{len(tasks)}):')
-        print('\n'.join(f'\t {task}' for task in tasks))
-    except requests.RequestException as e:
-        print(f"An error occurred: {e}")
-    except IndexError:
-        print("Please provide a user ID as a command-line argument.")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+def get_employee_todo(employee_id):
+    """ fetchs totals and completes of a user """
+    name = get_name(employee_id)
+    todos = get_todos(employee_id)
+    print(
+        f"Employee {name} is done with tasks("
+        f"{todos[0]}/{todos[1]}):"
+        )
+    completed_tasks = todos[2]
+    for completed_task in completed_tasks:
+        print(f"\t {completed_task}")
 
 
 if __name__ == "__main__":
-    """ usage handler """
-    if len(sys.argv) == 2:
-        employee_todo()
-    else:
-        print("Usage: ./script_name.py <user_id>")
+    employee_id = int(sys.argv[1])
+    get_employee_todo(employee_id)
