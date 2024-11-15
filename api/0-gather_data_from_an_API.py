@@ -4,22 +4,22 @@ import requests
 import sys
 
 
-def get_employee_todo_progress(employee_id):
+def get_employee_todo_progress(emp_id):
     """ fetchs API information """
-    employee_url = f'https://jsonplaceholder.typicode.com/users/{employee_id}'
-    todo_url = f'https://jsonplaceholder.typicode.com/todos?userId={employee_id}'
+    employee_url = f'https://jsonplaceholder.typicode.com/users/{emp_id}'
+    todo_url = f'https://jsonplaceholder.typicode.com/todos?userId={emp_id}'
 
     employee_response = requests.get(employee_url)
     if employee_response.status_code != 200:
-        print(f"Employee with ID {employee_id} not found.")
+        print(f"Employee with ID {emp_id} not found.")
         return
 
     employee_data = employee_response.json()
     employee_name = employee_data['name']
-    
+
     todo_response = requests.get(todo_url)
     if todo_response.status_code != 200:
-        print(f"Couldn't fetch todo list for employee ID {employee_id}.")
+        print(f"Couldn't fetch todo list for employee ID {emp_id}.")
         return
 
     todo_data = todo_response.json()
@@ -40,9 +40,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        employee_id = int(sys.argv[1])
+        emp_id = int(sys.argv[1])
     except ValueError:
         print("Employee ID must be an valid number")
         sys.exit(1)
 
-    get_employee_todo_progress(employee_id)
+    get_employee_todo_progress(emp_id)
