@@ -6,8 +6,8 @@ import sys
 
 def get_employee_todo_progress(emp_id):
     """ fetchs API information """
-    employee_url = f'https://jsonplaceholder.typicode.com/users/{emp_id}'
-    todo_url = f'https://jsonplaceholder.typicode.com/todos?userId={emp_id}'
+    employee_url = 'https://jsonplaceholder.typicode.com/users/{}'.format(emp_id)'
+    todo_url = 'https://jsonplaceholder.typicode.com/todos/?userId={}'.format(emp_id)'
 
     employee_response = requests.get(employee_url)
     if employee_response.status_code != 200:
